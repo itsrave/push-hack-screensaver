@@ -11,4 +11,4 @@ require (
 
 // Local build against the monorepo's core. For a published (Catalogue) build,
 // drop this replace and let the core/vX.Y.Z tag resolve from GitHub.
-replace github.com/federico-pepe/ableton-push-hack/core => ../ableton-push-hack/core
+replace github.com/federico-pepe/ableton-push-hack/core => ../../ableton-push-hack/core

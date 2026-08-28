@@ -6,6 +6,8 @@ import (
 	"sync"
 	"time"
 
+	"screensaver/animations"
+
 	"github.com/federico-pepe/ableton-push-hack/core/alsaseq"
 	"github.com/federico-pepe/ableton-push-hack/core/pmclient"
 	"github.com/federico-pepe/ableton-push-hack/core/push3"
@@ -92,6 +94,14 @@ func (a *App) deactivate() {
 	log.Printf("screensaver: off")
 }
 
+// animAt returns the animation at index i, clamped into the registry.
+func animAt(i int) animations.Anim {
+	if i < 0 || i >= len(animations.List) {
+		i = 0
+	}
+	return animations.List[i]
+}
+
 // renderLoop pushes ~20fps animation frames until stop is closed. It reads the
 // current animation/speed each frame so panel edits take effect live.
 func (a *App) renderLoop(stop chan struct{}) {
@@ -101,7 +111,6 @@ func (a *App) renderLoop(stop chan struct{}) {
 
 	var phase float64
 	last := time.Now()
-	stars = nil // fresh starfield each activation
 
 	for {
 		select {
@@ -116,12 +125,8 @@ func (a *App) renderLoop(stop chan struct{}) {
 			speed := float64(a.cfg.Speed)
 			a.mu.Unlock()
 
-			step := dt * speed * 0.2
-			phase += step
-			if anim == 2 {
-				moveStars(step)
-			}
-			drawFrame(img, anim, phase)
+			phase += dt * speed * 0.2
+			animAt(anim).Frame(img, phase)
 
 			if err := a.pm.PushImage(img); err != nil {
 				// push-manager/display gone — stop hammering it; idle watcher
@@ -180,8 +185,13 @@ func (a *App) ledLoop(stop chan struct{}) {
 			a.mu.Unlock()
 			phase += dt * speed * 0.2
 
-			// Pads (all animations).
-			cols := padColorsFor(anim, phase)
+			ad := animAt(anim)
+
+			// Pads: whatever the animation defines (else dark).
+			var cols [64]uint8
+			if ad.Pads != nil {
+				cols = ad.Pads(phase)
+			}
 			for i := 0; i < 64; i++ {
 				if cols[i] != lastPad[i] {
 					out.SendNote(dst, 0, byte(36+i), cols[i]) //nolint:errcheck
@@ -189,12 +199,12 @@ func (a *App) ledLoop(stop chan struct{}) {
 				}
 			}
 
-			// Function/top/transport buttons twinkle in Twinkle mode; off otherwise.
+			// Buttons: only animations that define Buttons light them (else off).
 			var bcols []uint8
-			if anim == 1 {
-				bcols = buttonTwinkleColors(phase)
+			if ad.Buttons != nil {
+				bcols = ad.Buttons(phase, len(twinkleButtons))
 			} else {
-				bcols = make([]uint8, len(twinkleButtons)) // all off
+				bcols = make([]uint8, len(twinkleButtons))
 			}
 			for j, cc := range twinkleButtons {
 				if bcols[j] != lastBtn[j] {

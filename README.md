@@ -12,13 +12,28 @@ instantly. On boot it runs a rainbow **LED sweep** across every pad and button.
 | # | Name | |
 |---|------|--|
 | 0 | Rainbow  | scrolling hue gradient |
-| 1 | Twinkle  | little ASCII stars (`* + .`) blinking and cycling colour |
+| 1 | Twinkle *(default)* | little ASCII stars (`* + .`) blinking and cycling colour |
 | 2 | Starfield| warp-speed stars |
 
 While active, the 8×8 **pad LEDs** animate to match the selected animation
-(rainbow wipe / colour-cycling twinkle / white sparkle). In **Twinkle** mode the
-function / top / transport **buttons** blink independently too, like the on-screen
-stars. All LEDs are cleared when the screensaver exits.
+(rainbow wipe / fading twinkle / white sparkle). In **Twinkle** mode the pads
+**fade** in and out (real dimming via the palette's dark shades), and the
+function / top / transport **buttons** blink independently too, like the
+on-screen stars. All LEDs are cleared when the screensaver exits.
+
+## Adding an animation
+
+Animations live in [`src/animations/`](src/animations/) and are trivial to add —
+each is one `Anim` value in the registry:
+
+1. Copy `src/animations/template.go.txt` to `src/animations/myanim.go`.
+2. Implement `Frame` (draws the 960×160 display) and optionally `Pads` /
+   `Buttons` (the Push LEDs). Shared helpers — `hsv`, `fastSin`, `NearestIndex`,
+   `padRamp`, `W`, `H` — are in `util.go`.
+3. Add your var to `List` in `animations.go` (append to keep existing indexes
+   stable). It appears in the SAVER tab automatically.
+
+No other file needs touching — `Names()`/`List` drive the config, UI and LED loop.
 
 ## Configuration — on-device
 
@@ -27,7 +42,7 @@ press the **SAVER** tab (top screen button 6). DPad ▲▼ pick a field; the jog
 wheel or the `-`/`+` soft-buttons change it:
 
 - **Enabled** — on/off
-- **Animation** — Rainbow / Plasma / Starfield
+- **Animation** — Rainbow / Twinkle / Starfield
 - **Idle** — seconds before takeover (5–3600)
 - **Speed** — 1–10
 

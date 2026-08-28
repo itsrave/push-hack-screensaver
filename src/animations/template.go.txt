@@ -1,0 +1,42 @@
+// Copy this file to <yourname>.go (drop the .txt), rename the var, and add it
+// to List in animations.go. See the "Adding an animation" note there.
+//
+// Delete the parts you don't need — only Name and Frame are required.
+
+package animations
+
+import (
+	"image"
+	"image/color"
+	"math"
+)
+
+var MyAnim = Anim{
+	Name: "MyAnim",
+
+	// Frame draws one 960x160 (W x H) display frame at phase t (seconds).
+	// The image is reused between frames, so paint every pixel you care about.
+	Frame: func(img *image.NRGBA, t float64) {
+		for y := 0; y < H; y++ {
+			for x := 0; x < W; x++ {
+				hue := math.Mod(float64(x)/float64(W)+t*0.1, 1)
+				r, g, b := hsv(hue, 1, 1) // shared helper in util.go
+				img.SetNRGBA(x, y, color.NRGBA{r, g, b, 255})
+			}
+		}
+	},
+
+	// Pads (optional): a Push palette index per pad (0 = off), note order 36..99.
+	// padRamp(hueBucket, level) gives a dimmable colour (level 0..Levels-1).
+	Pads: func(t float64) [64]uint8 {
+		var out [64]uint8
+		for i := 0; i < 64; i++ {
+			level := int((fastSin(float64(i)+t*3)+1)/2*float64(Levels-1) + 0.5)
+			out[i] = padRamp(i, level)
+		}
+		return out
+	},
+
+	// Buttons (optional): a palette index for each of `count` buttons.
+	// Buttons: func(t float64, count int) []uint8 { ... },
+}

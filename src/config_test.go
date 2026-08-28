@@ -18,14 +18,3 @@ func TestClamp(t *testing.T) {
 	}
 }
 
-// TestHSVPrimaries: hue wheel endpoints land on the expected primaries.
-func TestHSVPrimaries(t *testing.T) {
-	r, g, b := hsv(0, 1, 1) // red
-	if r != 255 || g != 0 || b != 0 {
-		t.Errorf("hsv(0) = %d,%d,%d, want 255,0,0", r, g, b)
-	}
-	r, g, b = hsv(1.0/3, 1, 1) // green
-	if g != 255 || r != 0 || b != 0 {
-		t.Errorf("hsv(1/3) = %d,%d,%d, want 0,255,0", r, g, b)
-	}
-}

@@ -5,11 +5,14 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"screensaver/animations"
 )
 
-// animNames indexes the animations. Order is the wire contract with the
-// push-manager SCREENSAVER panel — append only, never reorder.
-var animNames = []string{"Rainbow", "Twinkle", "Starfield"}
+// animNames indexes the animations, sourced from the animations registry.
+// Order is the wire contract with the push-manager SCREENSAVER panel — the
+// registry appends new animations, keeping existing indexes stable.
+var animNames = animations.Names()
 
 // Config is the user-tunable state, persisted next to hack.json as
 // screensaver.json. Kept deliberately small; the Shadow UI panel edits it.
@@ -21,7 +24,7 @@ type Config struct {
 }
 
 func defaultConfig() Config {
-	return Config{Enabled: true, Animation: 0, IdleSeconds: 30, Speed: 5}
+	return Config{Enabled: true, Animation: 1, IdleSeconds: 30, Speed: 5} // 1 = Twinkle
 }
 
 // clamp keeps a loaded/patched config inside sane ranges so a bad write can't

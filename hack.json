@@ -1,9 +1,9 @@
 {
   "id": "screensaver",
   "name": "Screensaver",
-  "description": "Idle screensaver for Push 3. After a configurable idle timeout it takes over the display with an animation (Rainbow / Plasma / Starfield); any pad/button/encoder wakes it. Configured on-device via push-manager's Shadow UI (SCREENSAVER tab). REQUIRES push-manager + push-display installed and running (it draws through push-manager's display API).",
+  "description": "Idle screensaver for Push 3. After a configurable idle timeout it takes over the display with an animation (Rainbow / Twinkle / Starfield), pads and buttons glowing along; any pad/button/encoder wakes it. Configured on-device via push-manager's Shadow UI (SAVER tab). REQUIRES push-manager + push-display installed and running (it draws through push-manager's display API).",
   "version": "0.1.0",
-  "author": "rave",
+  "author": "itsrave",
   "port": 7706,
   "binary": "screensaver",
   "enabled": true,
