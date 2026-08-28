@@ -73,6 +73,7 @@ func (a *App) activate() {
 	}
 	log.Printf("screensaver: on")
 	go a.renderLoop(stop)
+	go a.ledLoop(stop)
 }
 
 func (a *App) deactivate() {
@@ -127,6 +128,57 @@ func (a *App) renderLoop(stop chan struct{}) {
 				// will retry activation later.
 				log.Printf("render: PushImage: %v", err)
 				return
+			}
+		}
+	}
+}
+
+// ledLoop animates the 64 pad-grid LEDs while the screensaver is active,
+// mirroring the screen animation. Runs at ~12fps and only sends pads whose
+// palette index changed since the last frame, keeping MIDI traffic modest. On
+// stop it clears every pad so no glow is left behind.
+func (a *App) ledLoop(stop chan struct{}) {
+	a.mu.Lock()
+	out := a.out
+	dst := a.pushAddr
+	a.mu.Unlock()
+	if out == nil {
+		return // MIDI unavailable — display animation still runs
+	}
+
+	var last [64]uint8
+	for i := range last {
+		last[i] = 255 // invalid velocity → forces every pad to send on frame 1
+	}
+	defer func() {
+		for i := 0; i < 64; i++ {
+			out.SendNote(dst, 0, byte(36+i), 0) //nolint:errcheck
+		}
+	}()
+
+	tick := time.NewTicker(80 * time.Millisecond) // ~12fps
+	defer tick.Stop()
+	var phase float64
+	prev := time.Now()
+	for {
+		select {
+		case <-stop:
+			return
+		case now := <-tick.C:
+			dt := now.Sub(prev).Seconds()
+			prev = now
+			a.mu.Lock()
+			anim := a.cfg.Animation
+			speed := float64(a.cfg.Speed)
+			a.mu.Unlock()
+			phase += dt * speed * 0.2
+
+			cols := padColorsFor(anim, phase)
+			for i := 0; i < 64; i++ {
+				if cols[i] != last[i] {
+					out.SendNote(dst, 0, byte(36+i), cols[i]) //nolint:errcheck
+					last[i] = cols[i]
+				}
 			}
 		}
 	}

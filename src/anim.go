@@ -145,6 +145,36 @@ func drawStarfield(img *image.NRGBA) {
 	}
 }
 
+// padColorsFor returns a 64-entry pad LED palette in note order (36..99) for
+// the given animation and phase — the pad grid "glow" that plays alongside the
+// screen animation while the screensaver is active. Values are Push palette
+// indices (0 = off).
+func padColorsFor(anim int, t float64) [64]uint8 {
+	ring := rainbowRing()
+	n := len(ring)
+	var out [64]uint8
+	for i := 0; i < 64; i++ {
+		row, col := i/8, i%8
+		switch anim {
+		case 2: // starfield: sparse white twinkle on a dark grid
+			if fastSin(float64(i)*0.7+t*2) > 0.7 {
+				out[i] = 122 // white
+			}
+		case 1: // plasma
+			v := fastSin(float64(col)/2+t) + fastSin(float64(row)/2+t*1.3) + fastSin(float64(col+row)/2+t*0.7)
+			hue := math.Mod(v/4+t*0.05+1, 1)
+			out[i] = ring[int(hue*float64(n))%n]
+		default: // rainbow diagonal wipe
+			hue := math.Mod(float64(col+row)/14+t*0.15, 1)
+			if hue < 0 {
+				hue++
+			}
+			out[i] = ring[int(hue*float64(n))%n]
+		}
+	}
+	return out
+}
+
 func setPix(img *image.NRGBA, x, y int, c color.NRGBA) {
 	if x < 0 || y < 0 || x >= img.Rect.Dx() || y >= img.Rect.Dy() {
 		return

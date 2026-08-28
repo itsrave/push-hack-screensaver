@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"sync"
 	"time"
 
 	"github.com/federico-pepe/ableton-push-hack/core/alsaseq"
@@ -84,9 +85,29 @@ func (a *App) touch() {
 	a.mu.Unlock()
 }
 
-// rainbowLEDs are palette names spanning the hue wheel, resolved once to
-// velocity indices for the startup sweep.
+// rainbowLEDs are palette names spanning the hue wheel; rainbowRing resolves
+// them once to Push palette velocity indices, shared by the startup sweep and
+// the live pad animation.
 var rainbowLEDs = []string{"red", "orange", "yellow", "lime", "green", "teal", "sky", "blue", "indigo", "violet", "purple", "pink"}
+
+var (
+	ringOnce sync.Once
+	ring     []uint8
+)
+
+func rainbowRing() []uint8 {
+	ringOnce.Do(func() {
+		for _, n := range rainbowLEDs {
+			if v, ok := push3.ColorByName(n); ok {
+				ring = append(ring, v)
+			}
+		}
+		if len(ring) == 0 {
+			ring = []uint8{122} // white fallback
+		}
+	})
+	return ring
+}
 
 // ledStartupSequence blinks every pad and the main buttons on in a rainbow
 // wipe, then clears them — the "all LEDs blink in sequence" flourish on boot.
@@ -100,14 +121,7 @@ func (a *App) ledStartupSequence() {
 		return
 	}
 
-	colors := make([]uint8, len(rainbowLEDs))
-	for i, n := range rainbowLEDs {
-		if v, ok := push3.ColorByName(n); ok {
-			colors[i] = v
-		} else {
-			colors[i] = 122 // white fallback
-		}
-	}
+	colors := rainbowRing()
 	colorAt := func(i int) uint8 { return colors[i%len(colors)] }
 
 	// Pad grid: notes 36..99, wiped in order. On pads the Note velocity is the
