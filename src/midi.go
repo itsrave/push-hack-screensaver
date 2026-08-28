@@ -131,7 +131,7 @@ func (a *App) ledStartupSequence() {
 		time.Sleep(12 * time.Millisecond)
 	}
 	// Buttons: sweep the prominent CCs.
-	for i, cc := range sweepButtonCCs {
+	for i, cc := range twinkleButtons {
 		out.SendCC(dst, 0, cc, int32(colorAt(i))) //nolint:errcheck
 		time.Sleep(12 * time.Millisecond)
 	}
@@ -142,15 +142,15 @@ func (a *App) ledStartupSequence() {
 	for note := 36; note <= 99; note++ {
 		out.SendNote(dst, 0, byte(note), 0) //nolint:errcheck
 	}
-	for _, cc := range sweepButtonCCs {
+	for _, cc := range twinkleButtons {
 		out.SendCC(dst, 0, cc, 0) //nolint:errcheck
 	}
 }
 
-// sweepButtonCCs is a broad set of Push 3 button CCs to include in the startup
+// twinkleButtons is a broad set of Push 3 button CCs to include in the startup
 // wipe — the screen rows, transport, nav and mode buttons. Not exhaustive, but
 // reads as "all the buttons lit".
-var sweepButtonCCs = []byte{
+var twinkleButtons = []byte{
 	push3.CCScreenTop1, push3.CCScreenTop2, push3.CCScreenTop3, push3.CCScreenTop4,
 	push3.CCScreenTop5, push3.CCScreenTop6, push3.CCScreenTop7, push3.CCScreenTop8,
 	push3.CCScreenBot1, push3.CCScreenBot2, push3.CCScreenBot3, push3.CCScreenBot4,

@@ -16,7 +16,9 @@ instantly. On boot it runs a rainbow **LED sweep** across every pad and button.
 | 2 | Starfield| warp-speed stars |
 
 While active, the 8×8 **pad LEDs** animate to match the selected animation
-(rainbow wipe / colour-cycling twinkle / white sparkle).
+(rainbow wipe / colour-cycling twinkle / white sparkle). In **Twinkle** mode the
+function / top / transport **buttons** blink independently too, like the on-screen
+stars. All LEDs are cleared when the screensaver exits.
 
 ## Configuration — on-device
 

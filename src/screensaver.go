@@ -146,13 +146,20 @@ func (a *App) ledLoop(stop chan struct{}) {
 		return // MIDI unavailable — display animation still runs
 	}
 
-	var last [64]uint8
-	for i := range last {
-		last[i] = 255 // invalid velocity → forces every pad to send on frame 1
+	var lastPad [64]uint8
+	for i := range lastPad {
+		lastPad[i] = 255 // invalid velocity → forces every pad to send on frame 1
+	}
+	lastBtn := make([]uint8, len(twinkleButtons))
+	for i := range lastBtn {
+		lastBtn[i] = 255
 	}
 	defer func() {
 		for i := 0; i < 64; i++ {
 			out.SendNote(dst, 0, byte(36+i), 0) //nolint:errcheck
+		}
+		for _, cc := range twinkleButtons {
+			out.SendCC(dst, 0, cc, 0) //nolint:errcheck
 		}
 	}()
 
@@ -173,11 +180,26 @@ func (a *App) ledLoop(stop chan struct{}) {
 			a.mu.Unlock()
 			phase += dt * speed * 0.2
 
+			// Pads (all animations).
 			cols := padColorsFor(anim, phase)
 			for i := 0; i < 64; i++ {
-				if cols[i] != last[i] {
+				if cols[i] != lastPad[i] {
 					out.SendNote(dst, 0, byte(36+i), cols[i]) //nolint:errcheck
-					last[i] = cols[i]
+					lastPad[i] = cols[i]
+				}
+			}
+
+			// Function/top/transport buttons twinkle in Twinkle mode; off otherwise.
+			var bcols []uint8
+			if anim == 1 {
+				bcols = buttonTwinkleColors(phase)
+			} else {
+				bcols = make([]uint8, len(twinkleButtons)) // all off
+			}
+			for j, cc := range twinkleButtons {
+				if bcols[j] != lastBtn[j] {
+					out.SendCC(dst, 0, cc, int32(bcols[j])) //nolint:errcheck
+					lastBtn[j] = bcols[j]
 				}
 			}
 		}

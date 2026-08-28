@@ -181,6 +181,7 @@ func drawStarfield(img *image.NRGBA) {
 func padColorsFor(anim int, t float64) [64]uint8 {
 	ring := rainbowRing()
 	n := len(ring)
+	ensureTwinklePhases(n)
 	var out [64]uint8
 	for i := 0; i < 64; i++ {
 		row, col := i/8, i%8
@@ -189,9 +190,9 @@ func padColorsFor(anim int, t float64) [64]uint8 {
 			if fastSin(float64(i)*0.7+t*2) > 0.7 {
 				out[i] = 122 // white
 			}
-		case 1: // twinkle: pads blink on/off, colour cycling
-			if fastSin(float64(i)*0.9+t*3) > 0.3 {
-				out[i] = ring[(i+int(t*2))%n]
+		case 1: // twinkle: each pad blinks independently like a star, colour cycling
+			if fastSin(padPhase[i]+t*3) > 0.35 {
+				out[i] = ring[(padSeed[i]+int(t*2))%n]
 			}
 		default: // rainbow diagonal wipe
 			hue := math.Mod(float64(col+row)/14+t*0.15, 1)
@@ -199,6 +200,49 @@ func padColorsFor(anim int, t float64) [64]uint8 {
 				hue++
 			}
 			out[i] = ring[int(hue*float64(n))%n]
+		}
+	}
+	return out
+}
+
+// Twinkle LED state: a random phase + colour seed per pad and per twinkle
+// button, so they blink out of step with each other (scattered, star-like)
+// instead of in a wave.
+var (
+	padPhase     [64]float64
+	padSeed      [64]int
+	btnPhase     []float64
+	btnSeed      []int
+	twinkleReady bool
+)
+
+func ensureTwinklePhases(n int) {
+	if twinkleReady {
+		return
+	}
+	for i := 0; i < 64; i++ {
+		padPhase[i] = starRNG.Float64() * 2 * math.Pi
+		padSeed[i] = starRNG.Intn(n)
+	}
+	btnPhase = make([]float64, len(twinkleButtons))
+	btnSeed = make([]int, len(twinkleButtons))
+	for i := range twinkleButtons {
+		btnPhase[i] = starRNG.Float64() * 2 * math.Pi
+		btnSeed[i] = starRNG.Intn(n)
+	}
+	twinkleReady = true
+}
+
+// buttonTwinkleColors returns a palette index per twinkleButtons entry — the
+// same independent blink applied to the function/top/transport buttons.
+func buttonTwinkleColors(t float64) []uint8 {
+	ring := rainbowRing()
+	n := len(ring)
+	ensureTwinklePhases(n)
+	out := make([]uint8, len(twinkleButtons))
+	for i := range twinkleButtons {
+		if fastSin(btnPhase[i]+t*3) > 0.35 {
+			out[i] = ring[(btnSeed[i]+int(t*2))%n]
 		}
 	}
 	return out
