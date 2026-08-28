@@ -9,7 +9,7 @@ import (
 
 // animNames indexes the animations. Order is the wire contract with the
 // push-manager SCREENSAVER panel — append only, never reorder.
-var animNames = []string{"Rainbow", "Plasma", "Starfield"}
+var animNames = []string{"Rainbow", "Twinkle", "Starfield"}
 
 // Config is the user-tunable state, persisted next to hack.json as
 // screensaver.json. Kept deliberately small; the Shadow UI panel edits it.

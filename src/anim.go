@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/federico-pepe/ableton-push-hack/core/gfx/text"
 	"github.com/federico-pepe/ableton-push-hack/core/push3"
 )
 
@@ -34,7 +35,7 @@ func fastSin(x float64) float64 {
 func drawFrame(img *image.NRGBA, anim int, t float64) {
 	switch anim {
 	case 1:
-		drawPlasma(img, t)
+		drawTwinkle(img, t)
 	case 2:
 		drawStarfield(img)
 	default:
@@ -56,27 +57,55 @@ func drawRainbow(img *image.NRGBA, t float64) {
 	}
 }
 
-// drawPlasma: classic multi-sine plasma, computed at 1/4 resolution and
-// block-upscaled 4x so per-pixel sine cost stays small.
-func drawPlasma(img *image.NRGBA, t float64) {
-	const scale = 4
+// twStar is one ASCII star: a fixed position, a personal blink/hue phase, and
+// a draw scale (1 = little, 2 = bigger/nearer).
+type twStar struct {
+	x, y, phase float64
+	scale       int
+}
+
+var twStars []twStar
+
+// drawTwinkle: little ASCII stars scattered on a black field, each blinking on
+// and off and cycling colour. The glyph shifts with brightness (`*` bright,
+// `+` mid, `.` dim) so a star reads as fading in and out, not just toggling.
+func drawTwinkle(img *image.NRGBA, t float64) {
 	w, h := push3.VisW, push3.VisH
-	for cy := 0; cy < h; cy += scale {
-		for cx := 0; cx < w; cx += scale {
-			fx, fy := float64(cx)/24, float64(cy)/24
-			v := fastSin(fx+t) +
-				fastSin(fy+t*1.3) +
-				fastSin((fx+fy)/2+t*0.7) +
-				fastSin(math.Sqrt(fx*fx+fy*fy)+t)
-			hue := math.Mod(v/4+t*0.05+1, 1.0)
-			r, g, b := hsv(hue, 0.9, 1)
-			col := color.NRGBA{r, g, b, 255}
-			for dy := 0; dy < scale && cy+dy < h; dy++ {
-				for dx := 0; dx < scale && cx+dx < w; dx++ {
-					img.SetNRGBA(cx+dx, cy+dy, col)
-				}
+	if twStars == nil {
+		twStars = make([]twStar, 60)
+		for i := range twStars {
+			sc := 1
+			if starRNG.Float64() < 0.3 {
+				sc = 2
+			}
+			twStars[i] = twStar{
+				x:     starRNG.Float64() * float64(w-14),
+				y:     8 + starRNG.Float64()*float64(h-16),
+				phase: starRNG.Float64() * 2 * math.Pi,
+				scale: sc,
 			}
 		}
+	}
+	for i := range img.Pix {
+		img.Pix[i] = 0 // black field
+	}
+	for _, s := range twStars {
+		b := (fastSin(s.phase+t*3) + 1) / 2 // 0..1 blink
+		if b < 0.25 {
+			continue // fully off part of the blink
+		}
+		var ch string
+		switch {
+		case b > 0.75:
+			ch = "*"
+		case b > 0.5:
+			ch = "+"
+		default:
+			ch = "."
+		}
+		hue := math.Mod(s.phase/(2*math.Pi)+t*0.1, 1) // each star its own, drifting
+		r, g, bl := hsv(hue, 1, b)                     // brightness tracks the blink
+		text.DrawScaled(img, int(s.x), int(s.y), s.scale, ch, color.NRGBA{r, g, bl, 255})
 	}
 }
 
@@ -160,10 +189,10 @@ func padColorsFor(anim int, t float64) [64]uint8 {
 			if fastSin(float64(i)*0.7+t*2) > 0.7 {
 				out[i] = 122 // white
 			}
-		case 1: // plasma
-			v := fastSin(float64(col)/2+t) + fastSin(float64(row)/2+t*1.3) + fastSin(float64(col+row)/2+t*0.7)
-			hue := math.Mod(v/4+t*0.05+1, 1)
-			out[i] = ring[int(hue*float64(n))%n]
+		case 1: // twinkle: pads blink on/off, colour cycling
+			if fastSin(float64(i)*0.9+t*3) > 0.3 {
+				out[i] = ring[(i+int(t*2))%n]
+			}
 		default: // rainbow diagonal wipe
 			hue := math.Mod(float64(col+row)/14+t*0.15, 1)
 			if hue < 0 {

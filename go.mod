@@ -4,6 +4,11 @@ go 1.25.0
 
 require github.com/federico-pepe/ableton-push-hack/core v0.1.0
 
+require (
+	golang.org/x/image v0.41.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
+)
+
 // Local build against the monorepo's core. For a published (Catalogue) build,
 // drop this replace and let the core/vX.Y.Z tag resolve from GitHub.
 replace github.com/federico-pepe/ableton-push-hack/core => ../ableton-push-hack/core

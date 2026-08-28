@@ -12,8 +12,11 @@ instantly. On boot it runs a rainbow **LED sweep** across every pad and button.
 | # | Name | |
 |---|------|--|
 | 0 | Rainbow  | scrolling hue gradient |
-| 1 | Plasma   | classic multi-sine plasma |
+| 1 | Twinkle  | little ASCII stars (`* + .`) blinking and cycling colour |
 | 2 | Starfield| warp-speed stars |
+
+While active, the 8×8 **pad LEDs** animate to match the selected animation
+(rainbow wipe / colour-cycling twinkle / white sparkle).
 
 ## Configuration — on-device
 
