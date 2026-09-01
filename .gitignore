@@ -1,3 +1,5 @@
 /build/
 /screensaver
 *.tmp
+/dist/
+*.tar.gz
