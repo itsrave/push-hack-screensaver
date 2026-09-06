@@ -61,7 +61,8 @@ func starfieldFrame(img *image.NRGBA, t float64) {
 		if s.z < 0.4 {
 			size = 2
 		}
-		col := color.NRGBA{b, b, b, 255}
+		sr, sg, sb := NearestRGB(b, b, b)
+		col := color.NRGBA{sr, sg, sb, 255}
 		for dy := 0; dy < size; dy++ {
 			for dx := 0; dx < size; dx++ {
 				setPix(img, int(px)+dx, int(py)+dy, col)

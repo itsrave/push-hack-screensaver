@@ -71,4 +71,4 @@ for n in 2 3 4 5; do ln -sf /etc/init.d/${SVC} /etc/rc\${n}.d/S99${SVC} 2>/dev/n
 for n in 0 1 6; do ln -sf /etc/init.d/${SVC} /etc/rc\${n}.d/K01${SVC} 2>/dev/null || true; done
 /etc/init.d/${SVC} start"
 
-echo "==> done. config API: http://${HOST}:7706/  (configure via push-manager Shadow UI -> SAVER tab)"
+echo "==> done. configure in a browser at http://${HOST}:7706/"

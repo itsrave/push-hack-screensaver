@@ -59,7 +59,7 @@ func twinkleFrame(img *image.NRGBA, t float64) {
 			ch = "+"
 		}
 		hue := math.Mod(s.phase/(2*math.Pi)+t*0.1, 1)
-		r, g, bl := hsv(hue, 1, b)
+		r, g, bl := NearestRGB(hsv(hue, 1, b))
 		text.DrawScaled(img, int(s.x), int(s.y), s.scale, ch, color.NRGBA{r, g, bl, 255})
 	}
 }

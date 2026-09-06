@@ -5,7 +5,8 @@ An idle **screensaver** hack for the Ableton Push 3, built on the
 
 After a configurable idle period with no pad/button/encoder input, it takes
 over the Push 3 display with a full-screen animation. Any input wakes it
-instantly. On boot it runs a rainbow **LED sweep** across every pad and button.
+instantly. It can also run a rainbow **LED sweep** across every pad and button
+on boot (off by default; enable it in the browser config).
 
 ## Animations
 
@@ -31,23 +32,25 @@ each is one `Anim` value in the registry:
    `Buttons` (the Push LEDs). Shared helpers — `hsv`, `fastSin`, `NearestIndex`,
    `padRamp`, `W`, `H` — are in `util.go`.
 3. Add your var to `List` in `animations.go` (append to keep existing indexes
-   stable). It appears in the SAVER tab automatically.
+   stable). It appears in the browser config automatically.
 
 No other file needs touching — `Names()`/`List` drive the config, UI and LED loop.
 
-## Configuration — on-device
+## Configuration — browser
 
-Configured entirely through **push-manager's Shadow UI**: open it (Shift+Set),
-press the **SAVER** tab (top screen button 6). DPad ▲▼ pick a field; the jog
-wheel or the `-`/`+` soft-buttons change it:
+Configured from any browser on the same network at **`http://push.local:7706/`**
+(push-manager also links to it via the `web_ui` field in `hack.json`):
 
 - **Enabled** — on/off
 - **Animation** — Rainbow / Twinkle / Starfield
 - **Idle** — seconds before takeover (5–3600)
 - **Speed** — 1–10
+- **Startup LED sweep** — rainbow wipe across the pads on boot (default **off**;
+  applies on next boot)
 
-Settings persist to `screensaver.json` next to the binary and take effect live.
-There is also a plain-text status page at `http://push.local:7706/`.
+Settings persist to `screensaver.json` next to the binary and take effect live
+(the startup sweep on next boot); the page also shows whether the screensaver is
+currently active.
 
 ## Requires (hard dependency)
 
@@ -55,7 +58,7 @@ This is a **display-owning hack**: it draws by calling push-manager's
 `/api/display/*` HTTP API (never the shm framebuffer directly — see the
 framework's "Display-owning hacks" rule). So it needs, on the same device:
 
-- **push-manager** running (port 7701) — the SAVER config tab also lives here.
+- **push-manager** running (port 7701) — draws frames via its display API.
 - **push-display** installed — the LD_PRELOAD hook that puts frames on screen.
 
 The daemon logs a clear warning if either is missing (`dep: …`).

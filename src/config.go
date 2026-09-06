@@ -17,13 +17,15 @@ var animNames = animations.Names()
 // Config is the user-tunable state, persisted next to hack.json as
 // screensaver.json. Kept deliberately small; the Shadow UI panel edits it.
 type Config struct {
-	Enabled     bool `json:"enabled"`
-	Animation   int  `json:"animation"`    // index into animNames
-	IdleSeconds int  `json:"idle_seconds"` // idle timeout before takeover
-	Speed       int  `json:"speed"`        // 1..10 animation speed
+	Enabled      bool `json:"enabled"`
+	Animation    int  `json:"animation"`     // index into animNames
+	IdleSeconds  int  `json:"idle_seconds"`  // idle timeout before takeover
+	Speed        int  `json:"speed"`         // 1..10 animation speed
+	StartupSweep bool `json:"startup_sweep"` // rainbow LED wipe on boot (off by default)
 }
 
 func defaultConfig() Config {
+	// StartupSweep defaults to false (zero value).
 	return Config{Enabled: true, Animation: 1, IdleSeconds: 30, Speed: 5} // 1 = Twinkle
 }
 
