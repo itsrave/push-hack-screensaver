@@ -41,7 +41,7 @@ var indexHTML = []byte(`<!doctype html>
 
   <div class="row">
     <label for="enabled">Enabled</label>
-    <span class="switch"><input type="checkbox" id="enabled"><span class="slider"></span></span>
+    <label class="switch"><input type="checkbox" id="enabled"><span class="slider"></span></label>
   </div>
 
   <label for="animation">Animation</label>
@@ -56,7 +56,7 @@ var indexHTML = []byte(`<!doctype html>
 
   <div class="row">
     <label for="sweep">Startup LED sweep</label>
-    <span class="switch"><input type="checkbox" id="sweep"><span class="slider"></span></span>
+    <label class="switch"><input type="checkbox" id="sweep"><span class="slider"></span></label>
   </div>
   <div class="hint">Rainbow wipe across the pads when the device boots. Applies on next boot.</div>
 </main>
