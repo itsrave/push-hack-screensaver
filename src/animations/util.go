@@ -64,12 +64,12 @@ func hsv(h, s, v float64) (uint8, uint8, uint8) {
 	return uint8(r * 255), uint8(g * 255), uint8(b * 255)
 }
 
-// NearestIndex returns the Push palette index whose RGB is closest to (r,g,b).
+// nearestEntry returns the Push palette entry whose RGB is closest to (r,g,b).
 // This is how an arbitrary animation colour maps onto the hardware's fixed
 // 128-colour LED palette — and, crucially, how a dimmed colour lands on a
 // darker palette entry (the dk_* shades), giving pads a real fade.
-func NearestIndex(r, g, b uint8) uint8 {
-	best := uint8(0)
+func nearestEntry(r, g, b uint8) push3.PaletteEntry {
+	best := push3.Palette[0]
 	bestD := 1 << 30
 	for _, e := range push3.Palette {
 		dr := int(e.RGB.R) - int(r)
@@ -78,10 +78,21 @@ func NearestIndex(r, g, b uint8) uint8 {
 		d := dr*dr + dg*dg + db*db
 		if d < bestD {
 			bestD = d
-			best = e.Index
+			best = e
 		}
 	}
 	return best
+}
+
+// NearestIndex returns the palette index closest to (r,g,b) — for pad/button LEDs.
+func NearestIndex(r, g, b uint8) uint8 { return nearestEntry(r, g, b).Index }
+
+// NearestRGB snaps (r,g,b) to the RGB of the closest palette entry — the
+// on-screen twin of NearestIndex, so the display uses the exact same hardware
+// colours the pads light, instead of a synthetic RGB rainbow.
+func NearestRGB(r, g, b uint8) (uint8, uint8, uint8) {
+	e := nearestEntry(r, g, b).RGB
+	return e.R, e.G, e.B
 }
 
 // ── dim ramp ─────────────────────────────────────────────────────────────────

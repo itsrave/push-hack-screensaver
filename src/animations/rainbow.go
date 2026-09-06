@@ -13,7 +13,7 @@ var Rainbow = Anim{
 	Frame: func(img *image.NRGBA, t float64) {
 		for x := 0; x < W; x++ {
 			hue := math.Mod(float64(x)/float64(W)+t*0.15, 1)
-			r, g, b := hsv(hue, 1, 1)
+			r, g, b := NearestRGB(hsv(hue, 1, 1))
 			col := color.NRGBA{r, g, b, 255}
 			for y := 0; y < H; y++ {
 				img.SetNRGBA(x, y, col)
