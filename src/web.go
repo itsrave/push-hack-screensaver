@@ -24,6 +24,7 @@ var indexHTML = []byte(`<!doctype html>
   select { padding:8px; background:#1c1c1c; color:#eee; border:1px solid #333; border-radius:6px; }
   .row { display:flex; align-items:center; justify-content:space-between; margin:18px 0 6px; }
   .row label { margin:0; }
+  .hint { color:#777; font-size:12px; margin-top:6px; }
   .switch { position:relative; width:46px; height:26px; }
   .switch input { opacity:0; width:0; height:0; }
   .slider { position:absolute; inset:0; background:#444; border-radius:26px; transition:.2s; cursor:pointer; }
@@ -52,6 +53,12 @@ var indexHTML = []byte(`<!doctype html>
 
   <label for="speed">Speed <span class="val" id="speedval"></span></label>
   <input type="range" id="speed" min="1" max="10" step="1">
+
+  <div class="row">
+    <label for="sweep">Startup LED sweep</label>
+    <span class="switch"><input type="checkbox" id="sweep"><span class="slider"></span></span>
+  </div>
+  <div class="hint">Rainbow wipe across the pads when the device boots. Applies on next boot.</div>
 </main>
 <script>
 const $ = id => document.getElementById(id);
@@ -67,6 +74,7 @@ function render(s) {
   $('animation').value = s.animation;
   if (document.activeElement !== $('idle')) $('idle').value = s.idle_seconds;
   $('speed').value = s.speed; $('speedval').textContent = s.speed;
+  $('sweep').checked = s.startup_sweep;
   const st = $('status');
   st.classList.toggle('active', s.active);
   $('statustext').textContent = s.active ? 'active now' : 'idle — waiting';
@@ -86,6 +94,7 @@ $('animation').onchange = e => patch({animation: +e.target.value});
 $('idle').onchange = e => patch({idle_seconds: +e.target.value});
 $('speed').oninput  = e => $('speedval').textContent = e.target.value;
 $('speed').onchange = e => patch({speed: +e.target.value});
+$('sweep').onchange = e => patch({startup_sweep: e.target.checked});
 
 load();
 setInterval(load, 3000); // reflect live active-state changes

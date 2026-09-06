@@ -25,10 +25,16 @@ func main() {
 	app := newApp(cfgPath, loadConfig(cfgPath), *pmBase)
 
 	// MIDI (idle detection + LED output) after boot-settle, then the one-time
-	// startup LED sweep, then the idle state machine and dependency watcher.
+	// startup LED sweep (only if enabled in config), then the idle state
+	// machine and dependency watcher.
 	go func() {
 		app.setupMIDI()
-		app.ledStartupSequence()
+		app.mu.Lock()
+		sweep := app.cfg.StartupSweep
+		app.mu.Unlock()
+		if sweep {
+			app.ledStartupSequence()
+		}
 		go app.watchIdle()
 		go app.depWatch()
 	}()
@@ -75,10 +81,11 @@ func (a *App) handleRoot(w http.ResponseWriter, r *http.Request) {
 // configPatch is a partial update — only present fields are applied, so the
 // panel can change one setting at a time.
 type configPatch struct {
-	Enabled     *bool `json:"enabled"`
-	Animation   *int  `json:"animation"`
-	IdleSeconds *int  `json:"idle_seconds"`
-	Speed       *int  `json:"speed"`
+	Enabled      *bool `json:"enabled"`
+	Animation    *int  `json:"animation"`
+	IdleSeconds  *int  `json:"idle_seconds"`
+	Speed        *int  `json:"speed"`
+	StartupSweep *bool `json:"startup_sweep"`
 }
 
 func (a *App) handleConfig(w http.ResponseWriter, r *http.Request) {
@@ -100,6 +107,9 @@ func (a *App) handleConfig(w http.ResponseWriter, r *http.Request) {
 		}
 		if p.Speed != nil {
 			a.cfg.Speed = *p.Speed
+		}
+		if p.StartupSweep != nil {
+			a.cfg.StartupSweep = *p.StartupSweep
 		}
 		a.cfg.clamp()
 		cfg := a.cfg
