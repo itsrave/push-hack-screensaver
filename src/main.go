@@ -41,7 +41,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(addr, nil))
 }
 
-// status is the JSON returned to the Shadow UI panel and web clients.
+// status is the JSON returned to the browser config page (/api/config).
 type status struct {
 	Config
 	Active     bool     `json:"active"`
@@ -64,12 +64,12 @@ func (a *App) statusLocked() status {
 }
 
 func (a *App) handleRoot(w http.ResponseWriter, r *http.Request) {
-	a.mu.Lock()
-	s := a.statusLocked()
-	a.mu.Unlock()
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	fmt.Fprintf(w, "Push Hack Screensaver\n\nenabled: %v\nanimation: %s\nidle: %ds\nspeed: %d\nactive: %v\n\nConfigure on-device via push-manager's Shadow UI (SCREENSAVER tab).\n",
-		s.Enabled, s.AnimName, s.IdleSeconds, s.Speed, s.Active)
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write(indexHTML)
 }
 
 // configPatch is a partial update — only present fields are applied, so the
@@ -104,12 +104,7 @@ func (a *App) handleConfig(w http.ResponseWriter, r *http.Request) {
 		a.cfg.clamp()
 		cfg := a.cfg
 		a.mu.Unlock()
-
-		saveMu.Lock()
-		if err := saveConfig(a.cfgPath, cfg); err != nil {
-			log.Printf("config save: %v", err)
-		}
-		saveMu.Unlock()
+		a.persist(cfg)
 	}
 
 	a.mu.Lock()
@@ -117,4 +112,13 @@ func (a *App) handleConfig(w http.ResponseWriter, r *http.Request) {
 	a.mu.Unlock()
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(s)
+}
+
+// persist writes cfg to disk off the hot-path lock.
+func (a *App) persist(cfg Config) {
+	saveMu.Lock()
+	if err := saveConfig(a.cfgPath, cfg); err != nil {
+		log.Printf("config save: %v", err)
+	}
+	saveMu.Unlock()
 }
